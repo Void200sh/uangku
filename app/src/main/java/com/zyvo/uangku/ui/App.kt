@@ -1,6 +1,5 @@
 package com.zyvo.uangku.ui
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -41,6 +40,7 @@ import com.zyvo.uangku.data.Tx
 import com.zyvo.uangku.ui.screens.BudgetScreen
 import com.zyvo.uangku.ui.screens.GoalsScreen
 import com.zyvo.uangku.ui.screens.HomeScreen
+import com.zyvo.uangku.ui.screens.SettingsScreen
 import com.zyvo.uangku.ui.screens.StatsScreen
 import kotlinx.coroutines.launch
 
@@ -58,17 +58,17 @@ fun App() {
     val txs by Store.txs.collectAsState()
     val budgets by Store.budgets.collectAsState()
     val goals by Store.goals.collectAsState()
-    val themeMode by Store.themeMode.collectAsState()
-    val isDark = when (themeMode) {
-        1 -> false
-        2 -> true
-        else -> isSystemInDarkTheme()
-    }
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showAdd by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    if (showSettings) {
+        SettingsScreen(onClose = { showSettings = false })
+        return
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -114,8 +114,7 @@ fun App() {
             when (tab) {
                 0 -> HomeScreen(
                     txs = txs,
-                    isDark = isDark,
-                    onToggleTheme = { Store.setThemeMode(if (isDark) 1 else 2) },
+                    onOpenSettings = { showSettings = true },
                     onDelete = { tx ->
                         Store.delete(tx.id)
                         scope.launch { snackbarHostState.showSnackbar("Transaksi dihapus") }

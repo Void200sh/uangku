@@ -16,6 +16,7 @@ object Store {
     private const val KEY_TX = "transactions"
     private const val KEY_BUDGET = "budgets"
     private const val KEY_THEME = "theme_mode"
+    private const val KEY_THEME_ID = "theme_id"
     private const val KEY_GOALS = "goals"
 
     private lateinit var prefs: SharedPreferences
@@ -27,6 +28,9 @@ object Store {
     /** 0 = follow system, 1 = light, 2 = dark */
     val themeMode = MutableStateFlow(0)
 
+    /** id palet: emerald / pixel / sunset / lavender */
+    val themeId = MutableStateFlow("emerald")
+
     fun init(context: Context) {
         if (::prefs.isInitialized) return
         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -34,11 +38,30 @@ object Store {
         budgets.value = readBudgets()
         goals.value = readGoals()
         themeMode.value = prefs.getInt(KEY_THEME, 0)
+        themeId.value = prefs.getString(KEY_THEME_ID, "emerald") ?: "emerald"
     }
 
     fun setThemeMode(mode: Int) {
         themeMode.value = mode
         prefs.edit().putInt(KEY_THEME, mode).apply()
+    }
+
+    fun setThemeId(id: String) {
+        themeId.value = id
+        prefs.edit().putString(KEY_THEME_ID, id).apply()
+    }
+
+    /** Dipakai saat import backup: timpa semua data sekaligus. */
+    fun replaceAll(newTxs: List<Tx>, newBudgets: Map<String, Long>, newGoals: List<Goal>) {
+        val sortedTxs = newTxs.sortedWith(
+            compareByDescending<Tx> { it.date }.thenByDescending { it.id }
+        )
+        txs.value = sortedTxs
+        budgets.value = newBudgets
+        goals.value = newGoals.sortedByDescending { it.createdAt }
+        writeTxs(sortedTxs)
+        writeBudgets(newBudgets)
+        writeGoals(goals.value)
     }
 
     fun add(tx: Tx) {

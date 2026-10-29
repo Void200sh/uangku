@@ -27,6 +27,15 @@ build APK di GitHub Actions, repo github.com/Void200sh/uangku.
 - [ ] 21. Commit + push + workflow Actions sukses
 - [ ] 22. Download APK ke folder sesi (install lokal, tanpa Play Store) + kirim instruksi
 
+## v3 — multi tema + import/export (SEDANG JALAN)
+- [x] 23. Theme engine: 4 palet (Emerald, Pixel, Senja, Lavender) × terang/gelap, `AppTheme.fromId`
+- [x] 24. Store: `themeId` + `setThemeId`, `replaceAll()` untuk import
+- [x] 25. `Backup.kt`: export/import JSON (transaksi, anggaran, target + foto base64)
+- [x] 26. `SettingsScreen`: pilih tema (kartu gradien), mode Sistem/Terang/Gelap, export/import + dialog konfirmasi, info penyimpanan
+- [x] 27. Home: ikon gear buka Pengaturan (ganti toggle tema lama)
+- [x] 28. MainActivity: tema dari Store; versi 2.0 (versionCode 2)
+- [ ] 29. Push + build Actions + kirim APK
+
 ## Keputusan
 - Kotlin + Compose (bukan XML) — sesuai permintaan user "stack kotlin".
 - Storage lokal JSON (org.json bawaan Android) — tanpa Room/KSP = build stabil.

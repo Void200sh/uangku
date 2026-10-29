@@ -21,9 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,8 +66,7 @@ import kotlin.math.abs
 @Composable
 fun HomeScreen(
     txs: List<Tx>,
-    isDark: Boolean,
-    onToggleTheme: () -> Unit,
+    onOpenSettings: () -> Unit,
     onDelete: (Tx) -> Unit,
     onAdd: () -> Unit
 ) {
@@ -104,10 +102,10 @@ fun HomeScreen(
                         letterSpacing = (-0.3).sp
                     )
                 }
-                IconButton(onClick = onToggleTheme) {
+                IconButton(onClick = onOpenSettings) {
                     Icon(
-                        imageVector = if (isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                        contentDescription = "Ganti tema",
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = "Pengaturan",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

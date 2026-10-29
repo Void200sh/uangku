@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.zyvo.uangku.data.Store
 import com.zyvo.uangku.ui.App
+import com.zyvo.uangku.ui.theme.AppTheme
 import com.zyvo.uangku.ui.theme.UangKuTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,12 +19,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val mode by Store.themeMode.collectAsState()
+            val themeId by Store.themeId.collectAsState()
             val dark = when (mode) {
                 1 -> false
                 2 -> true
                 else -> isSystemInDarkTheme()
             }
-            UangKuTheme(darkTheme = dark) {
+            UangKuTheme(theme = AppTheme.fromId(themeId), darkTheme = dark) {
                 App()
             }
         }
