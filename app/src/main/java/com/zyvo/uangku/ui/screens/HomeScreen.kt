@@ -158,7 +158,17 @@ fun HomeScreen(
         }
 
         item("section") {
-            SectionLabel("Transaksi terbaru", Modifier.padding(top = 24.dp, bottom = 4.dp))
+            Row(
+                Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SectionLabel("Transaksi terbaru", Modifier.weight(1f))
+                Text(
+                    "Tahan untuk hapus",
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         if (txs.isEmpty()) {
