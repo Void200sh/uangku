@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.FloatingActionButton
@@ -34,9 +35,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zyvo.uangku.data.PhotoStore
 import com.zyvo.uangku.data.Store
 import com.zyvo.uangku.data.Tx
 import com.zyvo.uangku.ui.screens.BudgetScreen
+import com.zyvo.uangku.ui.screens.GoalsScreen
 import com.zyvo.uangku.ui.screens.HomeScreen
 import com.zyvo.uangku.ui.screens.StatsScreen
 import kotlinx.coroutines.launch
@@ -46,6 +49,7 @@ private data class TabItem(val label: String, val icon: ImageVector)
 private val TABS = listOf(
     TabItem("Beranda", Icons.Filled.Home),
     TabItem("Statistik", Icons.Filled.BarChart),
+    TabItem("Target", Icons.Filled.Flag),
     TabItem("Anggaran", Icons.Filled.Savings)
 )
 
@@ -53,6 +57,7 @@ private val TABS = listOf(
 fun App() {
     val txs by Store.txs.collectAsState()
     val budgets by Store.budgets.collectAsState()
+    val goals by Store.goals.collectAsState()
     val themeMode by Store.themeMode.collectAsState()
     val isDark = when (themeMode) {
         1 -> false
@@ -93,13 +98,15 @@ fun App() {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAdd = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Tambah transaksi")
+            if (tab != 2) {
+                FloatingActionButton(
+                    onClick = { showAdd = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Tambah transaksi")
+                }
             }
         }
     ) { innerPadding ->
@@ -117,6 +124,23 @@ fun App() {
                 )
 
                 1 -> StatsScreen(txs = txs)
+
+                2 -> GoalsScreen(
+                    goals = goals,
+                    onAdd = { goal ->
+                        Store.addGoal(goal)
+                        scope.launch { snackbarHostState.showSnackbar("Target dibuat") }
+                    },
+                    onFund = { id, amount ->
+                        Store.addToGoal(id, amount)
+                        scope.launch { snackbarHostState.showSnackbar("Tabungan ditambahkan") }
+                    },
+                    onDelete = { goal ->
+                        Store.deleteGoal(goal.id)
+                        PhotoStore.delete(goal.photo)
+                        scope.launch { snackbarHostState.showSnackbar("Target dihapus") }
+                    }
+                )
 
                 else -> BudgetScreen(
                     txs = txs,

@@ -6,6 +6,16 @@ import java.util.Locale
 
 enum class TxType { INCOME, EXPENSE }
 
+/** Barang/impian yang sedang ditabung, lengkap dengan fotonya. */
+data class Goal(
+    val id: Long,
+    val title: String,
+    val target: Long,
+    val saved: Long,
+    val photo: String?,
+    val createdAt: Long
+)
+
 data class Tx(
     val id: Long,
     val type: TxType,
@@ -65,6 +75,22 @@ val MONTH_NAMES = listOf(
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
     "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 )
+
+/** Saldo kumulatif di akhir tiap hari, dari yang paling lama ke hari ini. */
+fun balanceSeries(txs: List<Tx>, days: Int): List<Long> {
+    val cal = Calendar.getInstance()
+    cal.set(Calendar.HOUR_OF_DAY, 23)
+    cal.set(Calendar.MINUTE, 59)
+    cal.set(Calendar.SECOND, 59)
+    cal.set(Calendar.MILLISECOND, 999)
+    val endToday = cal.timeInMillis
+    val dayMs = 24L * 60 * 60 * 1000
+    return (days - 1 downTo 0).map { back ->
+        val limit = endToday - back * dayMs
+        txs.filter { it.date <= limit }
+            .sumOf { if (it.type == TxType.INCOME) it.amount else -it.amount }
+    }
+}
 
 /** Returns first millis of the month (inclusive) and first millis of the next month (exclusive). */
 fun monthRange(offset: Int): Pair<Long, Long> {

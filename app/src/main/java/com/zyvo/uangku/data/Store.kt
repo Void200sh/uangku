@@ -16,11 +16,13 @@ object Store {
     private const val KEY_TX = "transactions"
     private const val KEY_BUDGET = "budgets"
     private const val KEY_THEME = "theme_mode"
+    private const val KEY_GOALS = "goals"
 
     private lateinit var prefs: SharedPreferences
 
     val txs = MutableStateFlow<List<Tx>>(emptyList())
     val budgets = MutableStateFlow<Map<String, Long>>(emptyMap())
+    val goals = MutableStateFlow<List<Goal>>(emptyList())
 
     /** 0 = follow system, 1 = light, 2 = dark */
     val themeMode = MutableStateFlow(0)
@@ -30,6 +32,7 @@ object Store {
         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         txs.value = readTxs()
         budgets.value = readBudgets()
+        goals.value = readGoals()
         themeMode.value = prefs.getInt(KEY_THEME, 0)
     }
 
@@ -55,6 +58,24 @@ object Store {
         if (limit <= 0) next.remove(category) else next[category] = limit
         budgets.value = next
         writeBudgets(next)
+    }
+
+    fun addGoal(goal: Goal) {
+        val next = (goals.value + goal).sortedByDescending { it.createdAt }
+        goals.value = next
+        writeGoals(next)
+    }
+
+    fun addToGoal(id: Long, amount: Long) {
+        val next = goals.value.map { if (it.id == id) it.copy(saved = it.saved + amount) else it }
+        goals.value = next
+        writeGoals(next)
+    }
+
+    fun deleteGoal(id: Long) {
+        val next = goals.value.filterNot { it.id == id }
+        goals.value = next
+        writeGoals(next)
     }
 
     fun newId(): Long = System.currentTimeMillis()
@@ -110,5 +131,42 @@ object Store {
         val o = JSONObject()
         map.forEach { (k, v) -> o.put(k, v) }
         prefs.edit().putString(KEY_BUDGET, o.toString()).apply()
+    }
+
+    private fun readGoals(): List<Goal> = runCatching {
+        val raw = prefs.getString(KEY_GOALS, null) ?: return emptyList()
+        val arr = JSONArray(raw)
+        buildList {
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                add(
+                    Goal(
+                        id = o.getLong("id"),
+                        title = o.getString("title"),
+                        target = o.getLong("target"),
+                        saved = o.optLong("saved", 0L),
+                        photo = o.optString("photo", "").ifBlank { null },
+                        createdAt = o.optLong("createdAt", o.getLong("id"))
+                    )
+                )
+            }
+        }
+    }.getOrElse { emptyList() }
+
+    private fun writeGoals(list: List<Goal>) {
+        val arr = JSONArray()
+        list.forEach { g ->
+            arr.put(
+                JSONObject().apply {
+                    put("id", g.id)
+                    put("title", g.title)
+                    put("target", g.target)
+                    put("saved", g.saved)
+                    put("photo", g.photo ?: "")
+                    put("createdAt", g.createdAt)
+                }
+            )
+        }
+        prefs.edit().putString(KEY_GOALS, arr.toString()).apply()
     }
 }
