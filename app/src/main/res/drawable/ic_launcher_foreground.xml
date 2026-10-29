@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- wallet body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,38 L74,38 A9,9 0 0 1 83,47 L83,67 A9,9 0 0 1 74,76 L34,76 A9,9 0 0 1 25,67 L25,47 A9,9 0 0 1 34,38 Z" />
+
+    <!-- card slot -->
+    <path
+        android:fillColor="#1B7A43"
+        android:pathData="M68,51 L83,51 A4,4 0 0 1 87,55 L87,61 A4,4 0 0 1 83,65 L68,65 Z" />
+
+    <!-- coin -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,27 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
+</vector>
