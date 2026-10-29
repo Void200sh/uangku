@@ -24,5 +24,6 @@ build APK di GitHub Actions, repo github.com/Void200sh/uangku.
 - Gradle dipin 8.7 di workflow supaya tidak ikut versi runner.
 
 ## NOW
-Kode sumber SUDAH di-push ke github.com/Void200sh/uangku (tanpa workflow).
-Commit workflow masih lokal. Menunggu token dengan scope `workflow` → push commit CI → build APK.
+Source + README ada di GitHub. Token fine-grained user = READ-ONLY
+(Contents & Workflows belum write) → push commit CI masih 403.
+Menunggu izin token ditambah, lalu push → build → kirim APK.
