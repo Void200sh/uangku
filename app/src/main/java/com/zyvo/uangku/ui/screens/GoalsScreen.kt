@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,9 @@ import com.zyvo.uangku.data.PhotoStore
 import com.zyvo.uangku.data.asRupiah
 import com.zyvo.uangku.ui.EmptyState
 import com.zyvo.uangku.ui.GoalPhoto
+import com.zyvo.uangku.ui.LookCard
+import com.zyvo.uangku.ui.lookBorderColor
+import com.zyvo.uangku.ui.theme.LocalLook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -136,15 +140,12 @@ fun GoalsScreen(
         }
 
         item("summary") {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            LookCard(
+                container = MaterialTheme.colorScheme.primaryContainer,
+                padding = 18.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.padding(18.dp)) {
+                Column {
                     Text(
                         "TOTAL TERKUMPUL",
                         fontSize = 10.sp,
@@ -237,10 +238,22 @@ fun GoalsScreen(
 private fun GoalCard(goal: Goal, onClick: () -> Unit) {
     val pct = if (goal.target > 0) (goal.saved * 100 / goal.target).toInt() else 0
     val progress = if (goal.target > 0) (goal.saved.toFloat() / goal.target).coerceIn(0f, 1f) else 0f
+    val look = LocalLook.current
+    val shape = RoundedCornerShape(look.radius)
 
     Card(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .then(
+                if (look.border > 0.dp) {
+                    Modifier.border(look.border, lookBorderColor(), shape)
+                } else {
+                    Modifier
+                }
+            ),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {

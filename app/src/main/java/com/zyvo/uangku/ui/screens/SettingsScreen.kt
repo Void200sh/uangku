@@ -61,8 +61,10 @@ import androidx.compose.ui.unit.sp
 import com.zyvo.uangku.data.Backup
 import com.zyvo.uangku.data.Store
 import com.zyvo.uangku.ui.SectionLabel
-import com.zyvo.uangku.ui.theme.AppTheme
-import com.zyvo.uangku.ui.theme.themeHero
+import com.zyvo.uangku.ui.theme.Accent
+import com.zyvo.uangku.ui.theme.AppStyle
+import com.zyvo.uangku.ui.theme.accentSwatch
+import com.zyvo.uangku.ui.theme.styleHero
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -77,6 +79,7 @@ fun SettingsScreen(onClose: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
 
     val themeId by Store.themeId.collectAsState()
+    val accentId by Store.accentId.collectAsState()
     val themeMode by Store.themeMode.collectAsState()
     val txs by Store.txs.collectAsState()
     val goals by Store.goals.collectAsState()
@@ -169,17 +172,45 @@ fun SettingsScreen(onClose: () -> Unit) {
             }
 
             item("theme-label") {
-                SectionLabel("Tema tampilan", Modifier.padding(top = 18.dp, bottom = 8.dp))
+                SectionLabel("Gaya tampilan", Modifier.padding(top = 18.dp, bottom = 8.dp))
             }
 
             item("themes") {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(AppTheme.values().toList(), key = { it.id }) { theme ->
-                        ThemeCard(
-                            theme = theme,
+                    items(AppStyle.values().toList(), key = { it.id }) { style ->
+                        StyleCard(
+                            style = style,
+                            accent = Accent.fromId(accentId),
                             dark = isDark,
-                            selected = themeId == theme.id,
-                            onClick = { Store.setThemeId(theme.id) }
+                            selected = themeId == style.id,
+                            onClick = { Store.setThemeId(style.id) }
+                        )
+                    }
+                }
+            }
+
+            item("accent-label") {
+                SectionLabel("Warna aksen", Modifier.padding(top = 22.dp, bottom = 8.dp))
+            }
+
+            item("accents") {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(Accent.values().toList(), key = { it.id }) { accent ->
+                        val swatch = accentSwatch(accent, isDark)
+                            ?: styleHero(AppStyle.fromId(themeId), Accent.AUTO, isDark).first
+                        FilterChip(
+                            selected = accentId == accent.id,
+                            onClick = { Store.setAccentId(accent.id) },
+                            shape = CircleShape,
+                            leadingIcon = {
+                                Box(
+                                    Modifier
+                                        .size(14.dp)
+                                        .clip(CircleShape)
+                                        .background(swatch)
+                                )
+                            },
+                            label = { Text(accent.label, fontSize = 12.sp) }
                         )
                     }
                 }
@@ -321,17 +352,23 @@ fun SettingsScreen(onClose: () -> Unit) {
 }
 
 @Composable
-private fun ThemeCard(
-    theme: AppTheme,
+private fun StyleCard(
+    style: AppStyle,
+    accent: Accent,
     dark: Boolean,
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val (top, bottom) = themeHero(theme, dark)
-    val shape = RoundedCornerShape(18.dp)
+    val (top, bottom) = styleHero(style, accent, dark)
+    val previewRadius = when (style) {
+        AppStyle.PIXEL -> 6.dp
+        AppStyle.NIGHT, AppStyle.SAND -> 12.dp
+        AppStyle.LEDGER -> 16.dp
+    }
+    val shape = RoundedCornerShape(previewRadius)
     Column(
         modifier = Modifier
-            .width(104.dp)
+            .width(108.dp)
             .clip(shape)
             .then(
                 if (selected) {
@@ -348,8 +385,25 @@ private fun ThemeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(Brush.linearGradient(listOf(top, bottom))),
+                .clip(RoundedCornerShape(previewRadius - 3.dp))
+                .then(
+                    if (style == AppStyle.LEDGER) {
+                        Modifier.background(Brush.linearGradient(listOf(top, bottom)))
+                    } else {
+                        Modifier.background(top)
+                    }
+                )
+                .then(
+                    if (style == AppStyle.PIXEL || style == AppStyle.SAND) {
+                        Modifier.border(
+                            1.5.dp,
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                            RoundedCornerShape(previewRadius - 3.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                ),
             contentAlignment = Alignment.TopEnd
         ) {
             if (selected) {
@@ -363,13 +417,13 @@ private fun ThemeCard(
         }
         Spacer(Modifier.height(7.dp))
         Text(
-            theme.label,
+            style.label,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 3.dp)
         )
         Text(
-            theme.tagline,
+            style.tagline,
             fontSize = 9.5.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)

@@ -9,7 +9,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.zyvo.uangku.data.Store
 import com.zyvo.uangku.ui.App
-import com.zyvo.uangku.ui.theme.AppTheme
+import com.zyvo.uangku.ui.theme.Accent
+import com.zyvo.uangku.ui.theme.AppStyle
 import com.zyvo.uangku.ui.theme.UangKuTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,12 +21,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mode by Store.themeMode.collectAsState()
             val themeId by Store.themeId.collectAsState()
+            val accentId by Store.accentId.collectAsState()
             val dark = when (mode) {
                 1 -> false
                 2 -> true
                 else -> isSystemInDarkTheme()
             }
-            UangKuTheme(theme = AppTheme.fromId(themeId), darkTheme = dark) {
+            UangKuTheme(
+                style = AppStyle.fromId(themeId),
+                accent = Accent.fromId(accentId),
+                darkTheme = dark
+            ) {
                 App()
             }
         }

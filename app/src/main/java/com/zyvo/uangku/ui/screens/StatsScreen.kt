@@ -50,6 +50,7 @@ import com.zyvo.uangku.data.monthRange
 import com.zyvo.uangku.data.monthShort
 import com.zyvo.uangku.ui.CategoryBadge
 import com.zyvo.uangku.ui.EmptyState
+import com.zyvo.uangku.ui.LookCard
 import com.zyvo.uangku.ui.SectionLabel
 import com.zyvo.uangku.ui.StatTile
 import com.zyvo.uangku.ui.categoryStyle
@@ -149,13 +150,11 @@ fun StatsScreen(txs: List<Tx>) {
         }
 
         item("chart") {
-            Card(
+            LookCard(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                padding = 16.dp
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "6 bulan terakhir",
@@ -213,13 +212,8 @@ fun StatsScreen(txs: List<Tx>) {
             }
         } else {
             item("breakdown") {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                LookCard(modifier = Modifier.fillMaxWidth(), padding = 16.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         byCategory.forEach { (category, value) ->
                             CategoryBreakdownRow(
                                 category = category,

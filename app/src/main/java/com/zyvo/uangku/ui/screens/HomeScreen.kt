@@ -1,5 +1,6 @@
 package com.zyvo.uangku.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zyvo.uangku.data.Tx
@@ -60,7 +62,13 @@ import com.zyvo.uangku.ui.EmptyState
 import com.zyvo.uangku.ui.SectionLabel
 import com.zyvo.uangku.ui.StatTile
 import com.zyvo.uangku.ui.TxRow
+import com.zyvo.uangku.ui.lookBorderColor
+import com.zyvo.uangku.ui.theme.AppStyle
 import com.zyvo.uangku.ui.theme.LocalBrand
+import com.zyvo.uangku.ui.theme.LocalLook
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.text.font.FontFamily
 import kotlin.math.abs
 
 @Composable
@@ -122,22 +130,70 @@ fun HomeScreen(
         }
 
         item("hero") {
+            val look = LocalLook.current
             val diff = (series.lastOrNull() ?: 0L) - (series.firstOrNull() ?: 0L)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(26.dp))
-                    .background(Brush.linearGradient(listOf(brand.heroTop, brand.heroBottom)))
-                    .padding(20.dp)
-            ) {
-                Column {
+            val heroShape = RoundedCornerShape(look.heroRadius)
+            val onHero = when (look.style) {
+                AppStyle.LEDGER, AppStyle.PIXEL -> Color.White
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+            val curveColor = when (look.style) {
+                AppStyle.LEDGER, AppStyle.PIXEL -> Color.White
+                AppStyle.NIGHT -> brand.income
+                AppStyle.SAND -> MaterialTheme.colorScheme.onSurface
+            }
+            val chipBg = when (look.style) {
+                AppStyle.LEDGER -> Color.White.copy(alpha = 0.16f)
+                AppStyle.NIGHT -> MaterialTheme.colorScheme.surfaceVariant
+                AppStyle.SAND -> Color.Transparent
+                AppStyle.PIXEL -> Color.White.copy(alpha = 0.2f)
+            }
+            val chipBorder = if (look.style == AppStyle.SAND) 1.5.dp else 0.dp
+            Box(Modifier.fillMaxWidth()) {
+                if (look.hardShadow > 0.dp) {
+                    Box(
+                        Modifier
+                            .matchParentSize()
+                            .offset(x = look.hardShadow, y = look.hardShadow)
+                            .clip(heroShape)
+                            .background(MaterialTheme.colorScheme.onSurface)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(heroShape)
+                        .then(
+                            if (look.style == AppStyle.LEDGER) {
+                                Modifier.background(
+                                    Brush.linearGradient(listOf(brand.heroTop, brand.heroBottom))
+                                )
+                            } else {
+                                Modifier.background(
+                                    when (look.style) {
+                                        AppStyle.NIGHT -> MaterialTheme.colorScheme.surface
+                                        AppStyle.PIXEL -> MaterialTheme.colorScheme.primary
+                                        else -> brand.heroTop
+                                    }
+                                )
+                            }
+                        )
+                        .then(
+                            if (look.border > 0.dp) {
+                                Modifier.border(look.border, lookBorderColor(), heroShape)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .padding(20.dp)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "SALDO TOTAL",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.5.sp,
-                            color = Color.White.copy(alpha = 0.72f),
+                            color = onHero.copy(alpha = 0.72f),
                             modifier = Modifier.weight(1f)
                         )
                         Text(
@@ -145,7 +201,7 @@ fun HomeScreen(
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp,
-                            color = Color.White.copy(alpha = 0.5f)
+                            color = onHero.copy(alpha = 0.5f)
                         )
                     }
                     Spacer(Modifier.height(6.dp))
@@ -154,7 +210,8 @@ fun HomeScreen(
                         fontSize = 30.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.6).sp,
-                        color = Color.White
+                        fontFamily = if (look.mono) FontFamily.Monospace else FontFamily.Default,
+                        color = onHero
                     )
                     Spacer(Modifier.height(3.dp))
                     Text(
@@ -166,14 +223,19 @@ fun HomeScreen(
                         },
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.82f)
+                        color = onHero.copy(alpha = 0.82f)
                     )
                     Spacer(Modifier.height(10.dp))
-                    BalanceCurve(series, Modifier.fillMaxWidth().height(62.dp))
+                    BalanceCurve(
+                        series = series,
+                        color = curveColor,
+                        sharp = look.sharpCharts,
+                        modifier = Modifier.fillMaxWidth().height(62.dp)
+                    )
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        HeroChip("Masuk", income, Icons.Filled.ArrowDownward)
-                        HeroChip("Keluar", expense, Icons.Filled.ArrowUpward)
+                        HeroChip("Masuk", income, Icons.Filled.ArrowDownward, chipBg, onHero, chipBorder)
+                        HeroChip("Keluar", expense, Icons.Filled.ArrowUpward, chipBg, onHero, chipBorder)
                     }
                 }
             }
@@ -247,17 +309,28 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HeroChip(label: String, amount: Long, icon: ImageVector) {
-    Surface(color = Color.White.copy(alpha = 0.16f), shape = CircleShape) {
+private fun HeroChip(
+    label: String,
+    amount: Long,
+    icon: ImageVector,
+    background: Color,
+    contentColor: Color,
+    borderWidth: Dp
+) {
+    Surface(
+        color = background,
+        shape = CircleShape,
+        border = if (borderWidth > 0.dp) BorderStroke(borderWidth, contentColor) else null
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(13.dp))
             Spacer(Modifier.width(4.dp))
             Text(
                 "$label ${amount.asCompact()}",
-                color = Color.White,
+                color = contentColor,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -266,7 +339,12 @@ private fun HeroChip(label: String, amount: Long, icon: ImageVector) {
 }
 
 @Composable
-private fun BalanceCurve(series: List<Long>, modifier: Modifier = Modifier) {
+private fun BalanceCurve(
+    series: List<Long>,
+    color: Color,
+    sharp: Boolean,
+    modifier: Modifier = Modifier
+) {
     if (series.size < 2) return
     val minValue = series.minOrNull() ?: 0L
     val maxValue = series.maxOrNull() ?: 0L
@@ -285,10 +363,14 @@ private fun BalanceCurve(series: List<Long>, modifier: Modifier = Modifier) {
         val line = Path().apply {
             moveTo(0f, ys[0])
             for (i in 1 until ys.size) {
-                val x0 = (i - 1) * stepX
                 val x1 = i * stepX
-                val mid = (x0 + x1) / 2f
-                cubicTo(mid, ys[i - 1], mid, ys[i], x1, ys[i])
+                if (sharp) {
+                    lineTo(x1, ys[i])
+                } else {
+                    val x0 = (i - 1) * stepX
+                    val mid = (x0 + x1) / 2f
+                    cubicTo(mid, ys[i - 1], mid, ys[i], x1, ys[i])
+                }
             }
         }
         val area = Path().apply {
@@ -300,18 +382,18 @@ private fun BalanceCurve(series: List<Long>, modifier: Modifier = Modifier) {
         drawPath(
             path = area,
             brush = Brush.verticalGradient(
-                colors = listOf(Color.White.copy(alpha = 0.26f), Color.Transparent),
+                colors = listOf(color.copy(alpha = 0.26f), Color.Transparent),
                 startY = topPad,
                 endY = height
             )
         )
         drawPath(
             path = line,
-            color = Color.White.copy(alpha = 0.95f),
+            color = color,
             style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
         drawCircle(
-            color = Color.White,
+            color = color,
             radius = 3.dp.toPx(),
             center = Offset(width - 1.dp.toPx(), ys.last())
         )

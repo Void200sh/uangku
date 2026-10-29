@@ -23,6 +23,7 @@ object Backup {
         root.put("version", 2)
         root.put("exportedAt", System.currentTimeMillis())
         root.put("themeId", Store.themeId.value)
+        root.put("accentId", Store.accentId.value)
         root.put("themeMode", Store.themeMode.value)
 
         val txsArr = JSONArray()

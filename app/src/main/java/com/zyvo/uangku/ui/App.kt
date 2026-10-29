@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
@@ -42,6 +43,7 @@ import com.zyvo.uangku.ui.screens.GoalsScreen
 import com.zyvo.uangku.ui.screens.HomeScreen
 import com.zyvo.uangku.ui.screens.SettingsScreen
 import com.zyvo.uangku.ui.screens.StatsScreen
+import com.zyvo.uangku.ui.theme.LocalLook
 import kotlinx.coroutines.launch
 
 private data class TabItem(val label: String, val icon: ImageVector)
@@ -64,6 +66,7 @@ fun App() {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val look = LocalLook.current
 
     if (showSettings) {
         SettingsScreen(onClose = { showSettings = false })
@@ -103,7 +106,7 @@ fun App() {
                     onClick = { showAdd = true },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape
+                    shape = if (look.fabCircle) CircleShape else RoundedCornerShape(look.radius + 2.dp)
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = "Tambah transaksi")
                 }

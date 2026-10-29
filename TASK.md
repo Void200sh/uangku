@@ -34,7 +34,7 @@ build APK di GitHub Actions, repo github.com/Void200sh/uangku.
 - [x] 26. `SettingsScreen`: pilih tema (kartu gradien), mode Sistem/Terang/Gelap, export/import + dialog konfirmasi, info penyimpanan
 - [x] 27. Home: ikon gear buka Pengaturan (ganti toggle tema lama)
 - [x] 28. MainActivity: tema dari Store; versi 2.0 (versionCode 2)
-- [ ] 29. Push + build Actions + kirim APK
+- [x] 29. Push + build Actions sukses (apk-4), APK 16 MB diunduh ke Download/UangKu-2.0.apk
 
 ## Keputusan
 - Kotlin + Compose (bukan XML) — sesuai permintaan user "stack kotlin".
@@ -46,5 +46,9 @@ build APK di GitHub Actions, repo github.com/Void200sh/uangku.
   HP tidak dipakai untuk compile gradle — build tetap di Actions (aturan wajib).
 - Gradle dipin 8.7 di workflow supaya tidak ikut versi runner.
 
+- Debug APK tiap build punya tanda tangan berbeda (keystore runner acak) → update dari
+  versi lama HARUS uninstall dulu; makanya export/import wajib ada. Kalau mau update
+  tanpa uninstall, perlu keystore tetap (belum dikerjakan).
+
 ## NOW
-v2 sudah ditulis semua. Tinggal: commit → push → pantau Actions → ambil APK.
+v3 selesai & APK terkirim (apk-4, versi 2.0). Menunggu feedback user.

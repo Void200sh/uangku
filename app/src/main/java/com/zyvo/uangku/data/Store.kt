@@ -17,6 +17,7 @@ object Store {
     private const val KEY_BUDGET = "budgets"
     private const val KEY_THEME = "theme_mode"
     private const val KEY_THEME_ID = "theme_id"
+    private const val KEY_ACCENT = "accent_id"
     private const val KEY_GOALS = "goals"
 
     private lateinit var prefs: SharedPreferences
@@ -28,8 +29,11 @@ object Store {
     /** 0 = follow system, 1 = light, 2 = dark */
     val themeMode = MutableStateFlow(0)
 
-    /** id palet: emerald / pixel / sunset / lavender */
-    val themeId = MutableStateFlow("emerald")
+    /** id gaya: ledger / night / sand / pixel */
+    val themeId = MutableStateFlow("ledger")
+
+    /** id warna aksen: auto / hijau / biru / oranye / ungu / pink */
+    val accentId = MutableStateFlow("auto")
 
     fun init(context: Context) {
         if (::prefs.isInitialized) return
@@ -38,7 +42,18 @@ object Store {
         budgets.value = readBudgets()
         goals.value = readGoals()
         themeMode.value = prefs.getInt(KEY_THEME, 0)
-        themeId.value = prefs.getString(KEY_THEME_ID, "emerald") ?: "emerald"
+        val storedTheme = prefs.getString(KEY_THEME_ID, "ledger") ?: "ledger"
+        val normalized = when (storedTheme) {
+            "emerald" -> "ledger"
+            "sunset" -> "sand"
+            "lavender" -> "night"
+            else -> storedTheme
+        }
+        themeId.value = normalized
+        if (normalized != storedTheme) {
+            prefs.edit().putString(KEY_THEME_ID, normalized).apply()
+        }
+        accentId.value = prefs.getString(KEY_ACCENT, "auto") ?: "auto"
     }
 
     fun setThemeMode(mode: Int) {
@@ -49,6 +64,11 @@ object Store {
     fun setThemeId(id: String) {
         themeId.value = id
         prefs.edit().putString(KEY_THEME_ID, id).apply()
+    }
+
+    fun setAccentId(id: String) {
+        accentId.value = id
+        prefs.edit().putString(KEY_ACCENT, id).apply()
     }
 
     /** Dipakai saat import backup: timpa semua data sekaligus. */

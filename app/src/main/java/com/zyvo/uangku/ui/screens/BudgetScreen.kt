@@ -44,6 +44,7 @@ import com.zyvo.uangku.data.asRupiah
 import com.zyvo.uangku.data.monthName
 import com.zyvo.uangku.data.monthRange
 import com.zyvo.uangku.ui.CategoryBadge
+import com.zyvo.uangku.ui.LookCard
 import com.zyvo.uangku.ui.SectionLabel
 
 @Composable
@@ -97,13 +98,12 @@ fun BudgetScreen(
         }
 
         item("summary") {
-            Card(
+            LookCard(
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                container = MaterialTheme.colorScheme.primaryContainer,
+                padding = 18.dp
             ) {
-                Column(Modifier.padding(18.dp)) {
+                Column {
                     Text(
                         "TOTAL ANGGARAN BULAN INI",
                         fontSize = 10.sp,
@@ -158,13 +158,8 @@ fun BudgetScreen(
         }
 
         item("list") {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            LookCard(modifier = Modifier.fillMaxWidth(), padding = 16.dp) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     ordered.forEach { category ->
                         val limit = budgets[category]
                         val spent = spentByCategory[category] ?: 0L

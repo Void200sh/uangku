@@ -2,17 +2,21 @@ package com.zyvo.uangku.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -25,8 +29,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -36,7 +47,9 @@ import com.zyvo.uangku.data.Tx
 import com.zyvo.uangku.data.TxType
 import com.zyvo.uangku.data.asRupiah
 import com.zyvo.uangku.data.dayLabel
+import com.zyvo.uangku.ui.theme.AppStyle
 import com.zyvo.uangku.ui.theme.LocalBrand
+import com.zyvo.uangku.ui.theme.LocalLook
 
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
@@ -51,12 +64,75 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun lookBorderColor(): Color = when (LocalLook.current.style) {
+    AppStyle.NIGHT -> MaterialTheme.colorScheme.outline
+    else -> MaterialTheme.colorScheme.onSurface
+}
+
+/** Border putus-putus untuk gaya Sand Wallet. */
+fun Modifier.dashedBorder(color: Color, width: Dp, radius: Dp): Modifier = drawBehind {
+    val stroke = width.toPx()
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(stroke / 2f, stroke / 2f),
+        size = Size(size.width - stroke, size.height - stroke),
+        cornerRadius = CornerRadius(radius.toPx()),
+        style = Stroke(
+            width = stroke,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(9.dp.toPx(), 6.dp.toPx()))
+        )
+    )
+}
+
+/**
+ * Kartu serba-gaya: radius, border tebal, dan bayangan "stiker" mengikuti
+ * gaya yang sedang aktif (Ledger / Night Mint / Sand Wallet / Pixel).
+ */
+@Composable
+fun LookCard(
+    modifier: Modifier = Modifier,
+    container: Color = MaterialTheme.colorScheme.surface,
+    padding: Dp = 16.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val look = LocalLook.current
+    val shape = RoundedCornerShape(look.radius)
+    Box(modifier = modifier) {
+        if (look.hardShadow > 0.dp) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .offset(x = look.hardShadow, y = look.hardShadow)
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f))
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(container)
+                .then(
+                    if (look.border > 0.dp) {
+                        Modifier.border(look.border, lookBorderColor(), shape)
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(padding),
+            content = content
+        )
+    }
+}
+
+@Composable
 fun CategoryBadge(name: String, size: Dp = 40.dp) {
     val style = categoryStyle(name)
+    val look = LocalLook.current
     Box(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(size * 0.32f))
+            .clip(if (look.circleIcons) CircleShape else RoundedCornerShape(size * 0.32f))
             .background(style.color.copy(alpha = 0.14f)),
         contentAlignment = Alignment.Center
     ) {
@@ -77,11 +153,27 @@ fun TxRow(
     onLongClick: (() -> Unit)? = null
 ) {
     val brand = LocalBrand.current
+    val look = LocalLook.current
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(vertical = 10.dp),
+            .padding(vertical = 10.dp)
+            .then(
+                if (look.rowDivider) {
+                    Modifier.drawBehind {
+                        drawLine(
+                            color = dividerColor,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CategoryBadge(tx.category)
@@ -108,6 +200,7 @@ fun TxRow(
             text = (if (tx.type == TxType.INCOME) "+" else "-") + tx.amount.asRupiah(),
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
+            fontFamily = if (look.mono) FontFamily.Monospace else FontFamily.Default,
             color = if (tx.type == TxType.INCOME) brand.income else MaterialTheme.colorScheme.onSurface
         )
     }
@@ -120,9 +213,17 @@ fun StatTile(
     valueColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val look = LocalLook.current
+    val shape = RoundedCornerShape(look.radius)
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.then(
+            when {
+                look.dashed -> Modifier.dashedBorder(MaterialTheme.colorScheme.outline, 2.dp, look.radius)
+                look.border > 0.dp -> Modifier.border(look.border, lookBorderColor(), shape)
+                else -> Modifier
+            }
+        ),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -139,6 +240,7 @@ fun StatTile(
                 text = value,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold,
+                fontFamily = if (look.mono) FontFamily.Monospace else FontFamily.Default,
                 color = valueColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
